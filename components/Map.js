@@ -8,6 +8,8 @@ import MapViewDirections from 'react-native-maps-directions';
 import { GOOGLE_MAPS_APIKEY } from "@env";
 import { useRef } from 'react';
 
+const apiKey = GOOGLE_MAPS_APIKEY;
+
 const Map = () => {
   const origin = useSelector(selectorOrigin);
   const destination = useSelector(selectorDestination); 
@@ -34,14 +36,14 @@ const Map = () => {
       fetch(
         `https://maps.googleapis.com/maps/api/distancematrix/json?
         units=imperial&origins=${origin.description}&destinations=
-        ${destination.description}&key=${GOOGLE_MAPS_APIKEY}`
+        ${destination.description}&key=${apiKey}`
       ).then((res) => res.json())
       .then(data => {
         dispatch(setTravelTimeInformation(data.rows[0].elements[0]))
       })
     };
     getTravelTime();
-  }, [origin, destination, GOOGLE_MAPS_APIKEY]);
+  }, [origin, destination, apiKey]);
   
   return (
     <MapView 
@@ -59,7 +61,7 @@ const Map = () => {
         <MapViewDirections
           origin={origin.description}
           destination={destination.description}
-          apikey={GOOGLE_MAPS_APIKEY}
+          apikey={apiKey}
           strokeWidth={3}
           strokeColor='black'
         />

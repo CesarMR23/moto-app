@@ -1,17 +1,35 @@
 import { StyleSheet, Text, View, SafeAreaView, Image, TouchableOpacity } from 'react-native';
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import tw from 'tailwind-react-native-classnames';
-import NavOptions from '../components/navOptions.js';
+import NavOptions from '../components/navOptions';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_MAPS_APIKEY } from "@env";
-import { useDispatch } from 'react-redux';
-import { setDestination, setOrigin } from '../slices/navSlice.js';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDestination, setOrigin, selectorOrigin } from '../slices/navSlice';
 import { Icon } from 'react-native-elements';
+import { getLocation } from '../services/locationService'
+
+const apiKey = GOOGLE_MAPS_APIKEY;
 
 const HomeScreen = () => {
   const dispatch = useDispatch();
   const googlePlacesRef = useRef(null);
-  
+  const origin = useSelector(selectorOrigin);
+
+  const handleGetLocation = async () => {
+    const location = await getLocation();
+    if (location) {
+        const originData = {
+            location: {
+                lat: location.latitude,
+                lng: location.longitude,
+            },
+            description: "Ubicación actual",
+        };
+        dispatch(setOrigin(originData));
+    }
+};
+
   return (
     <SafeAreaView style={tw`bg-white h-full`}>
       <View style={tw`p-5`}>
@@ -26,6 +44,11 @@ const HomeScreen = () => {
             }}
         />
 
+      <Text style={styles.title}>Current Location</Text>
+      <TouchableOpacity style={styles.button} onPress={handleGetLocation}>
+        <Text style={styles.buttonText}>Get Current Location</Text>
+      </TouchableOpacity>
+
         <GooglePlacesAutocomplete
           ref={googlePlacesRef}
           placeholder='where from?'
@@ -37,7 +60,7 @@ const HomeScreen = () => {
               fontSize: 18,
             },
           }}
-          onPress={(data, details=null) =>{
+          onPress={(data, details = null) => {
             dispatch(setOrigin({
               location: details.geometry.location,
               description: data.description
@@ -50,10 +73,10 @@ const HomeScreen = () => {
           enablePoweredByContainer={false}
           minLength={2}
           query={{
-            key: GOOGLE_MAPS_APIKEY,
+            key: apiKey,
             language: "en",
+            components: "country:VE", // Limitar a Venezuela
           }}
-          nearbyPlacesAPI='GooglePlacesSearch'
           debounce={400}
           renderRightButton={() => (
             <View style={{ justifyContent: 'center' }}>
@@ -66,19 +89,31 @@ const HomeScreen = () => {
                 <Icon name='close' type='material' color='gray' size={18} />
               </TouchableOpacity>
             </View>
-          )}          
+          )} 
         />
-
         <NavOptions />
       </View>
     </SafeAreaView>
-  )
+  );
 }
 
-export default HomeScreen
+export default HomeScreen;
 
 const styles = StyleSheet.create({
     text:{
         color: "blue",
-    }
-})
+    },
+    title: {
+      fontSize: 20,
+      marginBottom: 20,
+    },
+    button: {
+      backgroundColor: 'blue',
+      padding: 10,
+      borderRadius: 5,
+    },
+    buttonText: {
+      color: 'white',
+      fontSize: 16,
+    },
+});
